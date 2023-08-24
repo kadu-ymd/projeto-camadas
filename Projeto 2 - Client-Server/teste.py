@@ -1,10 +1,15 @@
 from cliente import *
 
-comandos = ["\x00\x00\x00\x00", "\x00\x00\xBB\x00", "\xBB\x00\x00", "\x00\xBB\x00", "\x00\x00\xBB", "\x00\xAA", "\xBB\x00", "\x00", "\xBB"]
-
 n = sorteia_numero()
 comandos_escolhidos = []
 for i in range(n):
-    comandos_escolhidos.append(encontra_comando(comandos))
-            
-print(comandos_escolhidos)
+    comandos_escolhidos.append(b'\xff' + encontra_comando())
+
+comandos_escolhidos.append(b'\xff'*2)
+
+txBuffer = b''
+
+for cmd in comandos_escolhidos:
+    txBuffer += cmd
+
+print(txBuffer)

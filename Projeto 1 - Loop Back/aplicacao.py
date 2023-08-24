@@ -46,14 +46,16 @@ def main():
         # nome de txBuffer. Esla sempre irá armazenar os dados a serem enviados.
         
         #txBuffer = imagem em bytes!
-        imageR = './img/borbo.jpg'
-        imageW = './img/borbo2.jpg'
+        imageR = './Projeto 1 - Loop Back/img/borbo.jpg'
+        imageW = './Projeto 1 - Loop Back/img/borbo2.jpg'
 
         print('Carregando imagem para transmissão:')
         print(' - {}'.format(imageR))
         print("-------------------------")
 
         txBuffer = open(imageR, 'rb').read()
+
+        print(txBuffer)
 
         print("meu array de bytes tem tamanho {}" .format(len(txBuffer)))
         # faça aqui uma conferência do tamanho do seu txBuffer, ou seja, quantos bytes serão enviados.

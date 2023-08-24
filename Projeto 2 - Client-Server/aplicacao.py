@@ -25,42 +25,19 @@ comandos = ["\x00\x00\x00\x00", "\x00\x00\xBB\x00", "\xBB\x00\x00", "\x00\xBB\x0
 
 def main():
     try:
-        n = sorteia_numero()
-        comandos_escolhidos = []
-        for i in range(n):
-            comandos_escolhidos.append(encontra_comando(comandos))
-            
         print("Iniciou o main")
-        # declaramos um objeto do tipo enlace com o nome "com". Essa é a camada inferior à aplicação. Observe que um parametro
-        # para declarar esse objeto é o nome da porta.
         com1 = enlace(serialName)
-        
     
         # Ativa comunicacao. Inicia os threads e a comunicação seiral 
         com1.enable()
-        # Se chegamos até aqui, a comunicação foi aberta com sucesso. Faça um print para informar.
         print("Abriu a comunicação")
         
-           
-                  
-        # aqui você deverá gerar os dados a serem transmitidos. 
-        # seus dados a serem transmitidos são um array bytes a serem transmitidos. Gere esta lista com o 
-        # nome de txBuffer. Esla sempre irá armazenar os dados a serem enviados.
+        n = sorteia_numero()
+
+        txBuffer = to_bytearray(n)
         
-        #txBuffer = imagem em bytes!
-        imageR = './img/borbo.jpg'
-        imageW = './img/borbo2.jpg'
-
-        print('Carregando imagem para transmissão:')
-        print(' - {}'.format(imageR))
-        print("-------------------------")
-
-        txBuffer = open(imageR, 'rb').read()
-
         print("meu array de bytes tem tamanho {}" .format(len(txBuffer)))
-        # faça aqui uma conferência do tamanho do seu txBuffer, ou seja, quantos bytes serão enviados.
        
-            
         # finalmente vamos transmitir os todos. Para isso usamos a funçao sendData que é um método da camada enlace.
         # faça um print para avisar que a transmissão vai começar.
         # tente entender como o método send funciona!
@@ -91,11 +68,11 @@ def main():
         # for i in range(len(rxBuffer)):
         #     print("recebeu {}" .format(rxBuffer[i]))
         
-        print('Carregando imagem a ser salva')
-        print(' - {}'.format(imageW))
+        # print('Carregando imagem a ser salva')
+        # print(' - {}'.format(imageW))
 
-        with open(imageW, 'wb') as file:
-            file.write(rxBuffer)
+        # with open(imageW, 'wb') as file:
+        #     file.write(rxBuffer)
 
         # Encerra comunicação
         print("-------------------------")
