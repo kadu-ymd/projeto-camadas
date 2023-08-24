@@ -1,10 +1,5 @@
 #####################################################
 # Camada Física da Computação
-#Carareto
-#11/08/2022
-#Aplicação
-####################################################
-
 
 # esta é a camada superior, de aplicação do seu software de comunicação serial UART.
 # para acompanhar a execução e identificar erros, construa prints ao longo do código! 
@@ -12,6 +7,7 @@
 
 from enlace import *
 from enlaceTx import *
+from cliente import *
 import time
 import numpy as np
 
@@ -24,10 +20,16 @@ import numpy as np
 # serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 # serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
 serialName = "COM5"                  # Windows(variacao de)
+comandos = ["\x00\x00\x00\x00", "\x00\x00\xBB\x00", "\xBB\x00\x00", "\x00\xBB\x00", "\x00\x00\xBB", "\x00\xAA", "\xBB\x00", "\x00", "\xBB"]
 
 
 def main():
     try:
+        n = sorteia_numero()
+        comandos_escolhidos = []
+        for i in range(n):
+            comandos_escolhidos.append(encontra_comando(comandos))
+            
         print("Iniciou o main")
         # declaramos um objeto do tipo enlace com o nome "com". Essa é a camada inferior à aplicação. Observe que um parametro
         # para declarar esse objeto é o nome da porta.
