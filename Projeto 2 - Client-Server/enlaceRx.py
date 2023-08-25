@@ -68,12 +68,14 @@ class RX(object):
         return(b)
 
     def getNData(self, size):
+        t = 0
         while(self.getBufferLen() < size):
             time.sleep(0.05)
+            t += 0.05
+            if t == 5:
+                return(b'\xCC')
         return(self.getBuffer(size))
 
 
     def clearBuffer(self):
         self.buffer = b""
-
-

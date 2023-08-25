@@ -43,7 +43,12 @@ def main():
                
         com1.sendData(np.asarray(txBuffer))  #as array apenas como boa pratica para casos de ter uma outra forma de dados
         time.sleep(1)
+
         n_rx, _ = com1.getData(1)
+        if n_rx == b'\xCC':
+            print("Timeout!")
+            com1.disable()
+
         recebidos = int.from_bytes(n_rx, byteorder='little')
         print(f'O servidor recebeu {recebidos} comandos')
 
