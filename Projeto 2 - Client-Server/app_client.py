@@ -33,10 +33,7 @@ def main():
         time.sleep(1)
         print("Abriu a comunicação")
 
-        # 
-        
         n = sorteia_numero()
-
         txBuffer = to_bytearray(n)
 
         com1.sendData(bytes((len(txBuffer),)))
@@ -46,18 +43,28 @@ def main():
                
         com1.sendData(np.asarray(txBuffer))  #as array apenas como boa pratica para casos de ter uma outra forma de dados
         time.sleep(1)
-        print(f'enviei o seguinte: {np.asarray(txBuffer)}')
+        n_rx, _ = com1.getData(1)
+        recebidos = int.from_bytes(n_rx, byteorder='little')
+        print(f'O servidor recebeu {recebidos} comandos')
+
+        if recebidos==n:
+            print("Todos os bytes foram recebidos")
+            print(f'enviei {n} comandos e o seguintes conteudos: {np.asarray(txBuffer)}')
+
+        else:
+            print("Faltam bytes serem recebidos")
+
+        com1.disable()
+        
         # A camada enlace possui uma camada inferior, TX possui um método para conhecermos o status da transmissão
         # O método não deve estar fincionando quando usado como abaixo. deve estar retornando zero. Tente entender como esse método funciona e faça-o funcionar.
-        txSize = com1.tx.getStatus()
-        
-        com1.disable() # ?
+
+
         
     except Exception as erro:
         print("ops! :-\\")
         print(erro)
-        com1.disable()
-        
+        com1.disable()  
 
     # so roda o main quando for executado do terminal ... se for chamado dentro de outro modulo nao roda
 if __name__ == "__main__":
