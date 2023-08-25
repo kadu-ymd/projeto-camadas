@@ -20,7 +20,19 @@ def main():
         n, _ = com1.getData(1)
         n_bytes = int.from_bytes(n, byteorder='little')
 
-        print(com1.getData(n_bytes))
+        rx_buffer, nRx = com1.getData(n_bytes)
+        
+        cont = 0
+
+        for comm in rx_buffer.split(b'\xff'):
+            if comm != b'':
+                print(f'Comando: {comm}')
+                cont +=1
+
+        print(f'Número de comandos recebidos: {cont}')
+        
+        # com1.sendData(bytes((cont,)))
+        # time.sleep(1)
 
         # Encerra comunicação
         print("-------------------------")
