@@ -72,7 +72,7 @@ class RX(object):
         while(self.getBufferLen() < size):
             time.sleep(0.05)
             t += 0.05
-            if t == 5:
+            if t >= 5:
                 return(b'\xCC')
         return(self.getBuffer(size))
 
