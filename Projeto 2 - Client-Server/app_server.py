@@ -31,8 +31,8 @@ def main():
 
         print(f'Número de comandos recebidos: {cont}')
         
-        # com1.sendData(bytes((cont,)))
-        # time.sleep(1)
+        com1.sendData(bytes((cont,)))
+        time.sleep(1)
 
         # Encerra comunicação
         print("-------------------------")
