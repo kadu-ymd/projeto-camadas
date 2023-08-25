@@ -50,14 +50,13 @@ def main():
             com1.disable()
 
         recebidos = int.from_bytes(n_rx, byteorder='little')
-        print(f'O servidor recebeu {recebidos} comandos')
 
         if recebidos==n:
             print("Todos os bytes foram recebidos")
             print(f'enviei {n} comandos e o seguintes conteudos: {np.asarray(txBuffer)}')
 
         else:
-            print("Faltam bytes serem recebidos")
+            print("Faltam bytes a serem recebidos.")
 
         com1.disable()
         
