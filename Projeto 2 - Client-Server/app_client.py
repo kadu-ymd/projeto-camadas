@@ -17,7 +17,7 @@ import numpy as np
 # serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
 serialName = "COM3"                  # Windows(variacao de)
 comandos = ["\x00\x00\x00\x00", "\x00\x00\xBB\x00", "\xBB\x00\x00", "\x00\xBB\x00", "\x00\x00\xBB", "\x00\xAA", "\xBB\x00", "\x00", "\xBB"]
-
+dicio_binario = {1:'0001', 2:'0010', 3:'0011', 4:'0100'}
 
 def main():
     try:
@@ -34,15 +34,32 @@ def main():
         print("Abriu a comunicação")
 
         n = sorteia_numero()
-        txBuffer = to_bytearray(n)
+        txBuffer = to_bytearray(n) # Todos os comandos escolhidos
 
-        com1.sendData(bytes((len(txBuffer),)))
-        time.sleep(1)
+        #com1.sendData(bytes((len(txBuffer),)))
+        #time.sleep(1)  
+
+        j = 0
+        while j < len(txBuffer):
+            i = 1
+            while i<=3:
+                segundo_comando = txBuffer[i+1]
+                primeiro_comando = txBuffer[i]
+                # Soma das strings
+                strings = dicio_binario[len(primeiro_comando)] + dicio_binario[len(segundo_comando)]
+                print(f'O próximo comando é {hex(strings)}')
+                com1.sendData(bytes(hex(int(strings,2))))
+                time.sleep(1)
+                com1.sendData(bytes(primeiro_comando,)+bytes((segundo_comando,)))
+                time.sleep(1)
+                
+                i+=2
+            j+=2
 
         print("meu array de bytes tem tamanho {}" .format(len(txBuffer)))
                
-        com1.sendData(np.asarray(txBuffer))  #as array apenas como boa pratica para casos de ter uma outra forma de dados
-        time.sleep(1)
+        #com1.sendData(np.asarray(txBuffer))  #as array apenas como boa pratica para casos de ter uma outra forma de dados
+        #time.sleep(1)
 
         n_rx, _ = com1.getData(1)
         if n_rx == b'\xCC':

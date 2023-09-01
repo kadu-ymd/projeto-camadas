@@ -12,9 +12,9 @@ def encontra_comando():
 def to_bytearray(n):
     comandos_escolhidos = []
     for i in range(n):
-        comandos_escolhidos.append(b'\xff' + encontra_comando())
+        comandos_escolhidos.append(encontra_comando())
 
-    comandos_escolhidos.append(b'\xff'*2)
+    comandos_escolhidos.append(b'\xff')
 
     array = b''
 
