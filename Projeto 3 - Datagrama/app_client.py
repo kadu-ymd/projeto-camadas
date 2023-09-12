@@ -36,9 +36,15 @@ def main():
         payload = b''
         eop = b'\xee'*3
 
+        imageR = './imagem_enviada.png'
+        txBuffer = open(imageR, 'rb').read()
+
+        
         if meio:
             head = b'\xff'*12
             payload = b'\xbb'*50
+            # Enviar payload
+
             eop = b'\xee'*3
 
         pacote = head+payload+eop
