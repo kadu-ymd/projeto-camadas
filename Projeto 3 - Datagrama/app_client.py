@@ -52,7 +52,7 @@ def main():
         else:
             rx_handshake, _ = com1.getData(15)
 
-        imageR = './imagem_enviada.png'
+        imageR = './img/imagem_enviada.png'
         txBuffer = open(imageR, 'rb').read()
         qtd_pacotes = math.ceil(len(txBuffer)/50)
 
@@ -63,15 +63,18 @@ def main():
             pck_index = i.to_bytes(1, byteorder='little')
             pck_size = len(payload).to_bytes(1, byteorder='little')
             qt_pck = qtd_pacotes.to_bytes(1, byteorder='little')
-            head = pck_index + pck_size + qt_pck
-            
+            head = pck_index + pck_size + qt_pck + b'\xff'*9
+
             cont+=50
             pacote = head+payload+eop
             com1.sendData(pacote)
             time.sleep(1)
         
-        head = i+1
         payload = txBuffer[cont::]
+        pck_index = (i+1).to_bytes(1, byteorder='little')
+        pck_size = len(payload).to_bytes(1, byteorder='little')
+        qt_pck = qtd_pacotes.to_bytes(1, byteorder='little')
+        head = pck_index + pck_size + qt_pck + b'\xff'*9
         pacote = head+payload+eop
         com1.sendData(pacote)
         time.sleep(1)
