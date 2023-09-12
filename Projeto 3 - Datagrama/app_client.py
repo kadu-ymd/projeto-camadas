@@ -4,7 +4,7 @@
 from enlace import *
 from enlaceTx import *
 import time
-import numpy as np
+import math
 
 # voce deverá descomentar e configurar a porta com através da qual ira fazer comunicaçao
 #   para saber a sua porta, execute no terminal :
@@ -36,17 +36,6 @@ def main():
         payload = b''
         eop = b'\xee'*3
 
-        imageR = './imagem_enviada.png'
-        txBuffer = open(imageR, 'rb').read()
-
-        
-        if meio:
-            head = b'\xff'*12
-            payload = b'\xbb'*50
-            # Enviar payload
-
-            eop = b'\xee'*3
-
         pacote = head+payload+eop
         com1.sendData(pacote)
         time.sleep(1)
@@ -62,6 +51,30 @@ def main():
             reenvio = input("Servidor inativo. Tentar novamente? S/N")
         else:
             rx_handshake, _ = com1.getData(15)
+
+        imageR = './imagem_enviada.png'
+        txBuffer = open(imageR, 'rb').read()
+        qtd_pacotes = math.ceil(len(txBuffer)/50)
+
+        cont = 0
+        for i in range(1, qtd_pacotes):
+            payload = txBuffer[cont:i*50]
+
+            pck_index = i.to_bytes(1, byteorder='little')
+            pck_size = len(payload).to_bytes(1, byteorder='little')
+            qt_pck = qtd_pacotes.to_bytes(1, byteorder='little')
+            head = pck_index + pck_size + qt_pck
+            
+            cont+=50
+            pacote = head+payload+eop
+            com1.sendData(pacote)
+            time.sleep(1)
+        
+        head = i+1
+        payload = txBuffer[cont::]
+        pacote = head+payload+eop
+        com1.sendData(pacote)
+        time.sleep(1)
 
         
         print('A mensagem foi recebida')
