@@ -68,8 +68,12 @@ def main():
             cont+=50
             pacote = head+payload+eop
             com1.sendData(pacote)
-            time.sleep(1)
+            time.sleep(1.5)
+
+            rx_next, _ = com1.getData(15)
+            print('Recebi a confirmação de que o server recebeu')
         
+        # Demais arquivos, como é float
         payload = txBuffer[cont::]
         pck_index = (i+1).to_bytes(1, byteorder='little')
         pck_size = len(payload).to_bytes(1, byteorder='little')
@@ -79,7 +83,7 @@ def main():
         com1.sendData(pacote)
         time.sleep(1)
 
-        
+        _,_ = com1.getData(16)
         print('A mensagem foi recebida')
 
 
