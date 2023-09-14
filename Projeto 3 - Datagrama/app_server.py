@@ -17,6 +17,11 @@ def main():
         # ------------------------------------------------
         # Byte de sacrifício (oferenda)
         com1.enable()
+
+        # time.sleep(.2)
+        # com1.sendData(b'00')
+        # time.sleep(1)
+
         print("esperando 1 byte de sacrifício")
         _, _ = com1.getData(1)
         com1.rx.clearBuffer()
@@ -47,24 +52,21 @@ def main():
 
         _, _ = com1.getData(3)
         
-        cond1, cond2 = False, False
-        
         # loop
-        index_cond = int(rx_head[0]) # começa no 1
-        print(index_cond)
+        index_cond = 1 # começa no 1
         img_list = [rx_payload]
         
         com1.sendData(MSG_NEXT)
         time.sleep(1)
 
         for i in range(1, total_pck):
-            print('começo loop')
+            print(i)
+            cond1, cond2 = False, False
             rx_head, _ = com1.getData(12)
             
             pck_index = rx_head[0]
             payload_size = rx_head[1]
             total_pck = int(rx_head[2])
-
             rx_payload, _ = com1.getData(payload_size)
 
             rx_eop, _ = com1.getData(3) # EOP
@@ -83,8 +85,17 @@ def main():
                 img_list.append(rx_payload)
                 com1.sendData(MSG_NEXT)
                 time.sleep(1)
+            
             else:
-                print('Ops! Algo deu errado.')
+                if cond2 == False:
+                    com1.disable()
+                    raise Exception('Algo deu errado. O tamanho de um pacote está incorreto!')
+                elif cond1 == False:
+                    com1.disable()
+                    raise Exception('Algo deu errado. O índice de um pacote está incorreto!')
+                else:
+                    com1.disable()
+                    raise Exception('Algo deu errado. O índice e o tamanho de um pacote estão incorretos!')
                 
             if pck_index == total_pck:
                 for pck in img_list:
