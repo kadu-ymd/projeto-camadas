@@ -16,7 +16,6 @@ import math
 # serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
 serialName = "COM3"                  # Windows(variacao de)
 
-meio = False
 def main():
     try:
         print("Iniciou o main")
@@ -40,17 +39,23 @@ def main():
         com1.sendData(pacote)
         time.sleep(1)
 
-        t_inicio = time.time()
-        delta_t = 0
-        while delta_t <5 and com1.rx.getIsEmpty():
-            t_atual = time.time()
-            delta_t = t_atual-t_inicio
-            print(f'delta t = {delta_t} e t_atual {t_atual} e t_inicio {t_inicio}')
-            
-        if delta_t>=5:
-            reenvio = input("Servidor inativo. Tentar novamente? S/N")
-        else:
-            rx_handshake, _ = com1.getData(15)
+        while com1.rx.getIsEmpty():
+            t_inicio = time.time()
+            delta_t = 0
+            while delta_t <5 and com1.rx.getIsEmpty():
+                t_atual = time.time()
+                delta_t = t_atual-t_inicio
+                print(f'Tempo = {delta_t:.2f} segundos', end='\r')
+                
+            if delta_t>=5:
+                reenvio = input("Servidor inativo. Tentar novamente? S/N ")
+                if reenvio == "N":
+                    com1.disable()
+                    raise Exception("Não será reenviado")
+                #_,_ = com1.getData(1)
+
+            else:
+                rx_handshake, _ = com1.getData(15)
 
         imageR = './img/imagem_enviada.png'
         txBuffer = open(imageR, 'rb').read()
@@ -60,7 +65,8 @@ def main():
         for i in range(1, qtd_pacotes):
             payload = txBuffer[cont:i*50]
 
-            pck_index = i.to_bytes(1, byteorder='little')
+            #pck_index = (i+1).to_bytes(1, byteorder='little') # envio do indice errado
+            pck_index = (i).to_bytes(1, byteorder='little')
             pck_size = len(payload).to_bytes(1, byteorder='little')
             qt_pck = qtd_pacotes.to_bytes(1, byteorder='little')
             head = pck_index + pck_size + qt_pck + b'\xff'*9
@@ -68,14 +74,15 @@ def main():
             cont+=50
             pacote = head+payload+eop
             com1.sendData(pacote)
-            time.sleep(1.5)
+            time.sleep(1)
 
             rx_next, _ = com1.getData(15)
-            print('Recebi a confirmação de que o server recebeu')
+            print('Recebi a confirmação de que o server recebeu', pck_index)
         
         # Demais arquivos, como é float
         payload = txBuffer[cont::]
         pck_index = (i+1).to_bytes(1, byteorder='little')
+        #pck_size = (len(payload)+1).to_bytes(1, byteorder='little') # payload com o tamanho errado
         pck_size = len(payload).to_bytes(1, byteorder='little')
         qt_pck = qtd_pacotes.to_bytes(1, byteorder='little')
         head = pck_index + pck_size + qt_pck + b'\xff'*9
