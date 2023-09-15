@@ -18,14 +18,12 @@ def main():
         # Byte de sacrifício (oferenda)
         com1.enable()
 
-        # time.sleep(.2)
-        # com1.sendData(b'00')
-        # time.sleep(1)
-
         print("esperando 1 byte de sacrifício")
         _, _ = com1.getData(1)
         com1.rx.clearBuffer()
+        print('recebi byte de sacrifício')
         time.sleep(.1)
+
         # ------------------------------------------------
     
         # ------------------------------------------------
@@ -83,9 +81,9 @@ def main():
             # faz um booleano das duas condições necessárias para continuar o código
             if (cond1 and cond2):
                 img_list.append(rx_payload)
+                
                 com1.sendData(MSG_NEXT)
                 time.sleep(1)
-            
             else:
                 if cond2 == False:
                     com1.disable()
