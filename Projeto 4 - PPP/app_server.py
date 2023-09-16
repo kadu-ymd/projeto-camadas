@@ -2,12 +2,9 @@ from enlace import *
 from enlaceTx import *
 import time
 import numpy as np
+from utils import *
 
 serialName = "COM5"
-STD_HEAD = b'\xff'*12
-STD_EOP = b'\xee'*3
-MSG_NEXT = STD_HEAD + STD_EOP
-MSG_END = STD_HEAD + b'\xA0' + STD_EOP
 
 def main():
     try:
@@ -23,94 +20,90 @@ def main():
         com1.rx.clearBuffer()
         print('recebi byte de sacrifício')
         time.sleep(.1)
-
         # ------------------------------------------------
-    
-        # ------------------------------------------------
-        # Handshake
-        handshake = STD_HEAD + STD_EOP
-        rx_handshake, n_Hs = com1.getData(15)
-
-        if rx_handshake == handshake:
-            com1.sendData(handshake)
-            time.sleep(1)
-
-        # primeiro ciclo
-
-        image_bytes = b''
-        imageW = 'Projeto 3 - Datagrama/img/img_recebida.png'
         
-        rx_head, _ = com1.getData(12)
+        server_id = 1
+        idle = True
+        received = False
+        is_full = not com1.rx.getIsEmpty()
 
-        _ = rx_head[0]
-        payload_size = rx_head[1]
-        total_pck = int(rx_head[2])
+        while idle: # ocioso
+            while is_full:
+                rx_head, _ = com1.getData(10)
+                head = message_head(rx_head)
+                received = True
 
-        rx_payload, _ = com1.getData(payload_size)
+            if received == True: # recebeu msg t1
+                if server_id == head['h1']: # é para mim
+                    idle == False # ocioso = false
+            time.sleep(1) # sleep 1 sec
 
-        _, _ = com1.getData(3)
-        
-        # loop
-        index_cond = 1 # começa no 1
-        img_list = [rx_payload]
-        
-        com1.sendData(MSG_NEXT)
+        received = False
+
+        t2_message = build_message(build_head(head, b'\x02'), payload=b'')
+
+        com1.sendData(t2_message) # envia msg t2
         time.sleep(1)
 
-        for i in range(1, total_pck):
-            print(i)
-            cond1, cond2 = False, False
-            rx_head, _ = com1.getData(12)
+        cont = 1 # cont = 1
+
+        while cont <= head['h3']: # cont <= numPckg
+            received = False
+            timer1 = time.time() # set timer1
+            timer2 = time.time() # set timer2
+
+            while is_full:
+                rx_head, _ = com1.getData(10)
+                head = message_head(rx_head)
+
+                rx_payload, n_payload = com1.getData(head['h5'])
+                rx_eop, _ = com1.getData(4)
+                received = True
             
-            pck_index = rx_head[0]
-            payload_size = rx_head[1]
-            total_pck = int(rx_head[2])
-            rx_payload, _ = com1.getData(payload_size)
+            if received == True: # msg t3 recebida
+                pckg_status = is_package_ok(rx_head, rx_payload, rx_eop, cont)
+                if pckg_status == True:
+                    t4_message = build_message(build_head(head, b'\x04'), payload=rx_payload)
 
-            rx_eop, _ = com1.getData(3) # EOP
+                    com1.sendData(t4_message) # envia msg t4
+                    time.sleep(1)
 
-            # verifica o índice
-            if (index_cond + 1) == pck_index:
-                index_cond += 1
-                cond1 = True
-
-            # verifica se o pacote chegou completo
-            if rx_eop == (b'\xEE'*3):
-                cond2 = True
-
-            # faz um booleano das duas condições necessárias para continuar o código
-            if (cond1 and cond2):
-                img_list.append(rx_payload)
-                
-                com1.sendData(MSG_NEXT)
-                time.sleep(1)
-            else:
-                if cond2 == False:
-                    com1.disable()
-                    raise Exception('Algo deu errado. O tamanho de um pacote está incorreto!')
-                elif cond1 == False:
-                    com1.disable()
-                    raise Exception('Algo deu errado. O índice de um pacote está incorreto!')
+                    cont += 1
                 else:
+                    t6_message = build_message(build_head(head, b'\x06'), payload=b'')
+
+                    com1.sendData(t6_message) # envia msg t4
+                    time.sleep(1)
+            else:
+                time.sleep(1)
+                time_now = time.time()
+                if (time_now - timer2) > 20:
+                    idle = True
+                    t5_message = build_message(build_head(head, b'\x05'), payload=b'')
+
+                    com1.sendData(t5_message) # envia msg t5
+                    time.sleep(1)
+
+                    print(':-(')
                     com1.disable()
-                    raise Exception('Algo deu errado. O índice e o tamanho de um pacote estão incorretos!')
-                
-            if pck_index == total_pck:
-                for pck in img_list:
-                    image_bytes += pck
+                else:
+                    if (time_now - timer1) > 2:
+                        t4_message = build_message(build_head(head, b'\x04'), payload=rx_payload)
 
-        com1.sendData(MSG_END)
-        time.sleep(3)
+                        com1.sendData(t4_message) # envia msg t4
+                        time.sleep(1)
 
-        with open(imageW, 'wb') as file:
-            file.write(image_bytes)
-        
+                        timer1 = time.time()    
+
+        print('Sucesso!')
+
         # Encerra comunicação
         print("-------------------------")
         print("Comunicação encerrada")
         print("-------------------------")
         com1.disable()
         
+
     except Exception as erro:
         print("ops! :-\\")
         print(erro)

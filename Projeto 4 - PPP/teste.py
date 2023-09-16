@@ -1,4 +1,1 @@
-STD_HEAD = b'\xff'*12
-STD_EOP = b'\xee'*3
-payload = b'\xaa'
-print(STD_HEAD+b'\xuu'+STD_EOP)
+print((1).to_bytes(1, byteorder='little'))
