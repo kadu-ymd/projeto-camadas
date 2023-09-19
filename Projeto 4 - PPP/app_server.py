@@ -22,7 +22,6 @@ def main():
         time.sleep(.1)
         # ------------------------------------------------
         
-        server_id = 1
         idle = True
         received = False
         is_full = not com1.rx.getIsEmpty()

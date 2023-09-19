@@ -1,4 +1,5 @@
 EOP = b'\xAA\xBB\xCC\xDD'
+server_id = 1
 
 def message_head(rx_head: bytearray):
     try:
