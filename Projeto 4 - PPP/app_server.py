@@ -4,7 +4,7 @@ import time
 import numpy as np
 from utils import *
 
-serialName = "COM5"
+serialName = "COM6"
 
 def main():
     try:
@@ -24,17 +24,18 @@ def main():
         
         idle = True
         received = False
-        is_full = not com1.rx.getIsEmpty()
 
         while idle: # ocioso
+            is_full = not com1.rx.getIsEmpty()
             while is_full:
                 rx_head, _ = com1.getData(10)
                 head = message_head(rx_head)
+                _, _ = com1.getData(4)
                 received = True
-
+                break
             if received == True: # recebeu msg t1
-                if server_id == head['h1']: # é para mim
-                    idle == False # ocioso = false
+                if SERVER_ID == head['h1']: # é para mim
+                    idle = False # ocioso = false
             time.sleep(1) # sleep 1 sec
 
         received = False
@@ -45,8 +46,10 @@ def main():
         time.sleep(1)
 
         cont = 1 # cont = 1
-
+        print('segyunuda etapa')
         while cont <= head['h3']: # cont <= numPckg
+            print(cont, head['h3'])
+            is_full = not com1.rx.getIsEmpty()
             received = False
             timer1 = time.time() # set timer1
             timer2 = time.time() # set timer2
@@ -55,22 +58,29 @@ def main():
                 rx_head, _ = com1.getData(10)
                 head = message_head(rx_head)
 
-                rx_payload, n_payload = com1.getData(head['h5'])
+                payload_size = head['h5']
+                rx_payload, _ = com1.getData(payload_size)
+
                 rx_eop, _ = com1.getData(4)
+
                 received = True
+                break
             
             if received == True: # msg t3 recebida
                 pckg_status = is_package_ok(rx_head, rx_payload, rx_eop, cont)
-                if pckg_status == True:
+                print(pckg_status)
+                if pckg_status == True: # checkpoint
                     t4_message = build_message(build_head(head, b'\x04'), payload=rx_payload)
+                    print(t4_message)
 
                     com1.sendData(t4_message) # envia msg t4
                     time.sleep(1)
 
                     cont += 1
+                    print(cont)
                 else:
                     t6_message = build_message(build_head(head, b'\x06'), payload=b'')
-
+                    print(t6_message)
                     com1.sendData(t6_message) # envia msg t4
                     time.sleep(1)
             else:
