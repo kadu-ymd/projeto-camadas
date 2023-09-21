@@ -4,15 +4,17 @@ from utils import *
 import time
 import math
 
-serialName = "COM3"
-head = dict() # Inicializa head para que ele entre no critério do while
-head['h1'] = 0
-tam_head = 10
-tam_payload = 114
-tam_eop = 4
+serialName = "COM4"
 
 def main():
     try:
+        head = dict() # Inicializa head para que ele entre no critério do while
+        head['h0'] = b'\x00'
+        head['h1'] = 0
+        tam_head = 10
+        tam_payload = 114
+        tam_eop = 4
+
         print("Iniciou o main")
         com1 = enlace(serialName)
     
@@ -28,19 +30,21 @@ def main():
         inicia = False
         imageR = './img/imagem_enviada.png'
         txBuffer = open(imageR, 'rb').read()
-        qtd_pacotes = math.ceil(len(txBuffer)/tam_payload).to_bytes(1, byteorder='little')
+        qtd_pacotes = math.ceil(len(txBuffer)/tam_payload)
 
-        type1 = b'\x01' + server_id.to_bytes(1, byteorder='little') + b'\xff' + qtd_pacotes + EOP
-        if inicia == False:
+        type1 = b'\x01' + server_id.to_bytes(1, byteorder='little') + b'\xff' + qtd_pacotes.to_bytes(1, byteorder='little') + b'\x00' + b'\xff'*5 + EOP
+        while inicia == False:
             # envia t1 com identificador
             com1.sendData(type1)
             time.sleep(5)
-        
-        while (head['h1'] != server_id) and (int.from_bytes(head['h0'], byteorder="little") != 2): 
-            # checa se mensagem é t2 e se o id do servidor corresponde ao do arquivo utils
-            rx_head, _ = com1.getData(10)
-            head = message_head(rx_head)
 
+            while (head['h1'] != server_id) and (int.from_bytes(head['h0'], byteorder="little") != 2):
+                # checa se mensagem é t2 e se o id do servidor corresponde ao do arquivo utils
+                rx_head, _ = com1.getData(10)
+                head = message_head(rx_head)
+            break
+        
+        print('entra na segunda etapa')
         cont = 1
         indice = 0
         while cont<=qtd_pacotes:
@@ -50,16 +54,17 @@ def main():
 
             payload_type3 = txBuffer[indice:cont*tam_payload]
             indice += tam_payload
-            head_type3 = b'\x03' + b'\xff\xff' + qtd_pacotes + cont.to_bytes(1, byteorder='little') + tam_payload.to_bytes(1, byteorder='little') + b'\xff'*3
-            # ? último pacote recebido com sucesso. *3 temporário
+            head_type3 = b'\x03' + b'\xff\xff' + qtd_pacotes.to_bytes(1, byteorder='little') + cont.to_bytes(1, byteorder='little') + tam_payload.to_bytes(1, byteorder='little') + b'\xff' + (cont-1).to_bytes(1, byteorder='little') + b'\xff'*2
             com1.sendData(head_type3+payload_type3+EOP)
+            time.sleep(1)
             timer1 = time.time() # set timer1 - reenvio
             timer2 = time.time() # set timer2 - timeout
 
             rx_head, _ = com1.getData(10)
             head = message_head(rx_head)
+            print(head['h0'])
 
-            if int.from_bytes(head['h0'], byteorder="little") == 4:
+            if head['h0'] == 4:
                 # checa se a mensagem recebida é de tipo 4
                 cont+=1
             
@@ -86,7 +91,7 @@ def main():
 
                         if (int.from_bytes(head['h0'], byteorder="little") == 6):
                             # Recebeu msg t6:
-                            # ? Corrige cont
+                            cont = head['h7'] + 1
                             com1.sendData(head_type3+payload_type3+EOP) # Envia msg t3
 
                             # Reset timers
