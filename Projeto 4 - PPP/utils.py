@@ -38,7 +38,13 @@ def is_package_ok(rx_head: bytearray, rx_payload: bytearray, rx_eop: bytearray, 
         return True
     else:
         return False
-    
+
+def list_to_bytearray(list: list):
+    array: bytearray = b''
+    for i in list:
+        array += i
+    return array
+
 class Message:
     # def __init__(self, type: int, qtd: int, n_pck: int, cont: int) -> None:
     #     self.qtd = to_bytes(qtd)

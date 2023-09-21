@@ -5,6 +5,7 @@ import numpy as np
 from utils import *
 
 serialName = "COM6"
+IMAGE_W = 'Projeto 4 - PPP/img/img_recebida.png'
 
 def main():
     try:
@@ -25,6 +26,7 @@ def main():
         
         idle = True
         received = False
+        byte_image = list()
 
         while idle: # ocioso
             is_full = not com1.rx.getIsEmpty()
@@ -48,9 +50,8 @@ def main():
         time.sleep(1)
 
         cont = 1 # cont = 1
-        print('segyunuda etapa')
-        while cont <= head['h3']: # cont <= numPckg
-            print(cont, head['h3'])
+
+        while cont < head['h3']: # cont <= numPckg
             is_full = not com1.rx.getIsEmpty()
             received = False
             timer1 = time.time() # set timer1
@@ -62,36 +63,33 @@ def main():
                 QTD_PACOTES = head['h3']
                 n_pck = head['h4']
                 payload_size = head['h5']
-
+                
                 rx_payload, _ = com1.getData(payload_size)
 
                 rx_eop, _ = com1.getData(4)
-                
-
                 received = True
                 break
             
             if received == True: # msg t3 recebida
                 pckg_status = is_package_ok(rx_head, rx_payload, rx_eop, cont)
-                print(pckg_status)
-                if pckg_status == True: # pckg ok - checkpoint
+                if pckg_status == True: # pckg ok
                     t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
                     t4_payload = b''
 
                     t4_message = message.build(t4_head, t4_payload)
-                    print(t4_message)
 
                     com1.sendData(t4_message) # envia msg t4
                     time.sleep(1)
 
+                    byte_image.append(rx_payload)
+                    print(byte_image)
+
                     cont += 1
-                    print(cont)
                 else:
                     t6_head = b'\x06' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(cont) + to_bytes(cont - 1) + BYTE2_FREE
                     t6_payload = b''
 
                     t6_message = message.build(t6_head, t6_payload)
-                    print(t6_message)
 
                     com1.sendData(t6_message) # envia msg t6
                     time.sleep(1)
@@ -104,7 +102,6 @@ def main():
                     t5_payload = b''
 
                     t5_message = message.build(t5_head, t5_payload)
-                    print(t5_message)
 
                     com1.sendData(t5_message) # envia msg t5
                     time.sleep(1)
@@ -117,13 +114,17 @@ def main():
                         t4_payload = b''
 
                         t4_message = message.build(t4_head, t4_payload)
-                        print(t4_message)
 
                         com1.sendData(t4_message) # envia msg t4
                         time.sleep(1)
 
-                        timer1 = time.time()    
+                        timer1 = time.time()
 
+        image = list_to_bytearray(byte_image)
+        print(image)
+
+        with open(IMAGE_W, 'wb') as file:
+            file.write(image)
         print('Sucesso!')
 
         # Encerra comunicação
