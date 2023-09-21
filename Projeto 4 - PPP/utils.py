@@ -1,5 +1,7 @@
 EOP = b'\xAA\xBB\xCC\xDD'
 SERVER_ID = 1
+BYTE1_FREE = b'\xff'
+BYTE2_FREE = b'\xff\xff'
 
 def message_head(rx_head: bytearray):
     try:
@@ -37,3 +39,52 @@ def is_package_ok(rx_head: bytearray, rx_payload: bytearray, rx_eop: bytearray, 
     else:
         return False
     
+class Message:
+    # def __init__(self, type: int, qtd: int, n_pck: int, cont: int) -> None:
+    #     self.qtd = to_bytes(qtd)
+    #     self.type = type
+    #     self.n = to_bytes(n_pck)
+    #     self.cont = cont
+
+
+    # def build_head(self) -> bytearray:
+    #     try:
+    #         if self.type == 1:
+    #             return to_bytes(self.type) + to_bytes(SERVER_ID) + b'\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
+
+    #         elif self.type == 2:
+    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
+
+    #         elif self.type == 3:
+    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff' + b'\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
+            
+    #         elif self.type == 4:
+    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
+            
+    #         elif self.type == 5:
+    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
+            
+    #         else:
+    #             pass
+    #     except:
+    #         pass
+
+    #     pass
+
+    def __init__(self) -> None:
+        pass
+
+    def build(self, head: bytearray, payload: bytearray, eop: bytearray = EOP) -> bytearray:
+        '''
+        Recebe o HEAD, o PAYLOAD e o EOP (padrão igual a AA BB CC DD) e devolve a mensagem pronta.
+    
+        - Inputs
+          - head: bytearray
+          - payload: bytearray
+          - O EOP já está definido como variável global e pode ser chamado pelo nome 'EOP'.
+        '''
+        try:
+            return head + payload + eop
+        except TypeError as error:
+            print(error)
+

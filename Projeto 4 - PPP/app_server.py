@@ -10,7 +10,8 @@ def main():
     try:
         print("Iniciou o main")
         com1 = enlace(serialName)
-
+        message = Message()
+        
         # ------------------------------------------------
         # Byte de sacrifício (oferenda)
         com1.enable()
@@ -30,6 +31,7 @@ def main():
             while is_full:
                 rx_head, _ = com1.getData(10)
                 head = message_head(rx_head)
+                
                 _, _ = com1.getData(4)
                 received = True
                 break
@@ -57,11 +59,14 @@ def main():
             while is_full:
                 rx_head, _ = com1.getData(10)
                 head = message_head(rx_head)
-
+                QTD_PACOTES = head['h3']
+                n_pck = head['h4']
                 payload_size = head['h5']
+
                 rx_payload, _ = com1.getData(payload_size)
 
                 rx_eop, _ = com1.getData(4)
+                
 
                 received = True
                 break
@@ -69,8 +74,11 @@ def main():
             if received == True: # msg t3 recebida
                 pckg_status = is_package_ok(rx_head, rx_payload, rx_eop, cont)
                 print(pckg_status)
-                if pckg_status == True: # checkpoint
-                    t4_message = build_message(build_head(head, b'\x04'), payload=rx_payload)
+                if pckg_status == True: # pckg ok - checkpoint
+                    t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
+                    t4_payload = b''
+
+                    t4_message = message.build(t4_head, t4_payload)
                     print(t4_message)
 
                     com1.sendData(t4_message) # envia msg t4
@@ -79,25 +87,37 @@ def main():
                     cont += 1
                     print(cont)
                 else:
-                    t6_message = build_message(build_head(head, b'\x06'), payload=b'')
+                    t6_head = b'\x06' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(cont) + to_bytes(cont - 1) + BYTE2_FREE
+                    t6_payload = b''
+
+                    t6_message = message.build(t6_head, t6_payload)
                     print(t6_message)
-                    com1.sendData(t6_message) # envia msg t4
+
+                    com1.sendData(t6_message) # envia msg t6
                     time.sleep(1)
             else:
                 time.sleep(1)
                 time_now = time.time()
                 if (time_now - timer2) > 20:
-                    idle = True
-                    t5_message = build_message(build_head(head, b'\x05'), payload=b'')
+                    idle = True # ocioso = True
+                    t5_head = b'\x05' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
+                    t5_payload = b''
+
+                    t5_message = message.build(t5_head, t5_payload)
+                    print(t5_message)
 
                     com1.sendData(t5_message) # envia msg t5
                     time.sleep(1)
 
                     print(':-(')
-                    com1.disable()
+                    com1.disable() # encerra COM
                 else:
                     if (time_now - timer1) > 2:
-                        t4_message = build_message(build_head(head, b'\x04'), payload=rx_payload)
+                        t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
+                        t4_payload = b''
+
+                        t4_message = message.build(t4_head, t4_payload)
+                        print(t4_message)
 
                         com1.sendData(t4_message) # envia msg t4
                         time.sleep(1)
