@@ -33,6 +33,8 @@ def main():
             while is_full:
                 rx_head, _ = com1.getData(10)
                 head = message_head(rx_head)
+                QTD_PACOTES = head['h3']
+                n_pck = head['h4']
                 
                 _, _ = com1.getData(4)
                 received = True
@@ -44,7 +46,10 @@ def main():
 
         received = False
 
-        t2_message = build_message(build_head(head, b'\x02'), payload=b'')
+        t2_head = b'\x02' + BYTE2_FREE + QTD_PACOTES + n_pck + b'\x00' + b'\xff' + head['h7'] + BYTE2_FREE
+        t2_payload = b''
+
+        t2_message = message.build(t2_head, t2_payload)
 
         com1.sendData(t2_message) # envia msg t2
         time.sleep(1)
@@ -60,7 +65,6 @@ def main():
             while is_full:
                 rx_head, _ = com1.getData(10)
                 head = message_head(rx_head)
-                QTD_PACOTES = head['h3']
                 n_pck = head['h4']
                 payload_size = head['h5']
                 

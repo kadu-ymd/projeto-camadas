@@ -1,3 +1,5 @@
+from datetime import datetime 
+
 EOP = b'\xAA\xBB\xCC\xDD'
 SERVER_ID = 1
 BYTE1_FREE = b'\xff'
@@ -44,6 +46,18 @@ def list_to_bytearray(list: list):
     for i in list:
         array += i
     return array
+
+def get_date():
+    '''
+    Retorna a data no formato dd/mm/aa.
+    '''
+    return str(datetime.now().strftime("%d/%m/%y"))
+
+def get_time():
+    '''
+    Retorna o horário no formato hora:mês:seg.ms.
+    '''
+    return str(datetime.now().strftime("%H:%M:%S.%f"))
 
 class Message:
     # def __init__(self, type: int, qtd: int, n_pck: int, cont: int) -> None:
