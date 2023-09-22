@@ -46,7 +46,7 @@ def main():
 
         received = False
 
-        t2_head = b'\x02' + BYTE2_FREE + QTD_PACOTES + n_pck + b'\x00' + b'\xff' + head['h7'] + BYTE2_FREE
+        t2_head = b'\x02' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + b'\xff' + to_bytes(head['h7']) + BYTE2_FREE
         t2_payload = b''
 
         t2_message = message.build(t2_head, t2_payload)
@@ -75,6 +75,7 @@ def main():
                 break
             
             if received == True: # msg t3 recebida
+                print('recebi t3')
                 pckg_status = is_package_ok(rx_head, rx_payload, rx_eop, cont)
                 if pckg_status == True: # pckg ok
                     t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
