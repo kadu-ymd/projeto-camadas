@@ -31,20 +31,24 @@ def main():
         txBuffer = open(imageR, 'rb').read()
         qtd_pacotes = math.ceil(len(txBuffer)/tam_payload)
 
-        type1 = b'\x01' + SERVER_ID.to_bytes(1, byteorder='little') + b'\xff' + qtd_pacotes.to_bytes(1, byteorder='little') + b'\x00' + b'\xff'*5 + EOP
+        head_type1 = b'\x01' + to_bytes(SERVER_ID) + b'\xff' + to_bytes(qtd_pacotes) + b'\x00' + BYTE1_FREE*5
+        type1 = message.build(head_type1, b'')
+        
         while inicia == False:
             # envia t1 com identificador
             com1.sendData(type1)
             time.sleep(5)
 
-            while (head['h1'] != SERVER_ID) and (int.from_bytes(head['h0'], byteorder="little") != 2):
+            while (head['h1'] != SERVER_ID) and head['h0'] != 2:
                 # checa se mensagem é t2 e se o id do servidor corresponde ao do arquivo utils
-                rx_head, _ = com1.getData(10)
-                _,_ = com1.getData(4)
-                head = message_head(rx_head)
+                is_full = not com1.rx.getIsEmpty()
+                while is_full:
+                    rx_head, _ = com1.getData(10)
+                    _,_ = com1.getData(4)
+                    head = message_head(rx_head)
+                    break
             break
         
-        print('Entra na segunda etapa')
         cont = 1
         indice = 0
         while cont<qtd_pacotes:
@@ -56,15 +60,19 @@ def main():
                 payload_type3 = txBuffer[indice:cont*tam_payload]
             
             indice += tam_payload
-            head_type3 = b'\x03' + b'\xff\xff' + qtd_pacotes.to_bytes(1, byteorder='little') + cont.to_bytes(1, byteorder='little') + tam_payload.to_bytes(1, byteorder='little') + b'\xff' + (cont-1).to_bytes(1, byteorder='little') + b'\xff'*2
-            com1.sendData(message.build(head_type3,payload_type3))
+            head_type3 = b'\x03' + BYTE2_FREE + to_bytes(qtd_pacotes)+ to_bytes(cont)+ to_bytes(tam_payload) + BYTE1_FREE + to_bytes(cont-1) + BYTE2_FREE
+            type3 = message.build(head_type3,payload_type3)
+            com1.sendData(type3)
             time.sleep(1)
             timer1 = time.time() # set timer1 - reenvio
             timer2 = time.time() # set timer2 - timeout
 
-            rx_head, _ = com1.getData(10)
-            _, _ = com1.getData(4)
-            head = message_head(rx_head)
+            is_full = not com1.rx.getIsEmpty()
+            while is_full:
+                rx_head, _ = com1.getData(10)
+                _,_ = com1.getData(4)
+                head = message_head(rx_head)
+                break
 
             if head['h0'] == 4:
                 # checa se a mensagem recebida é de tipo 4
@@ -74,8 +82,8 @@ def main():
                 time_now = time.time()
                 if (time_now - timer1)>5:
                     # envia o mesmo pacote com dados de tipo 3
-                    com1.sendData(head_type3+payload_type3+EOP)
-                    print(head_type3+payload_type3+EOP)
+                    com1.sendData(type3)
+                    print(type3)
                     timer1 = time.time() # reset timer1 
 
                 if (time_now - timer2)>20:
@@ -90,19 +98,26 @@ def main():
                     com1.disable()
 
                 else:
-                    rx_head, _ = com1.getData(10)
-                    _, _ = com1.getData(4)
-                    head = message_head(rx_head)
-                    while (int.from_bytes(head['h0'], byteorder="little") != 4): 
-                        # while recebeu msg t4 == False:
+                    is_full = not com1.rx.getIsEmpty()
+                    while is_full:
                         rx_head, _ = com1.getData(10)
-                        _, _ = com1.getData(4)
+                        _,_ = com1.getData(4)
                         head = message_head(rx_head)
+                        break
 
-                        if (int.from_bytes(head['h0'], byteorder="little") == 6):
+                    while head['h0'] != 4: 
+                        # while recebeu msg t4 == False:
+                        is_full = not com1.rx.getIsEmpty()
+                        while is_full:
+                            rx_head, _ = com1.getData(10)
+                            _,_ = com1.getData(4)
+                            head = message_head(rx_head)
+                            break
+
+                        if head['h0'] == 6:
                             # Recebeu msg t6:
                             cont = head['h7'] + 1
-                            com1.sendData(head_type3+payload_type3+EOP) # Envia msg t3
+                            com1.sendData(type3) # Envia msg t3
 
                             # Reset timers
                             timer1 = time.time()
