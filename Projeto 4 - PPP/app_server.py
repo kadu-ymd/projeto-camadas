@@ -73,11 +73,13 @@ def main():
                 rx_eop, _ = com1.getData(4)
                 received = True
                 break
+            print(head)
             
             if received == True: # msg t3 recebida
-                print('recebi t3')
+                print('2. recebi t3')
                 pckg_status = is_package_ok(rx_head, rx_payload, rx_eop, cont)
                 if pckg_status == True: # pckg ok
+                    print('3. manda t4')
                     t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
                     t4_payload = b''
 
@@ -91,9 +93,9 @@ def main():
 
                     cont += 1
                 else:
-                    t6_head = b'\x06' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(cont) + to_bytes(cont - 1) + BYTE2_FREE
+                    t6_head = b'\x06' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(head['h7']) + to_bytes(cont - 1) + BYTE2_FREE
                     t6_payload = b''
-
+                    print(to_bytes(cont))
                     t6_message = message.build(t6_head, t6_payload)
 
                     com1.sendData(t6_message) # envia msg t6
@@ -115,7 +117,7 @@ def main():
                     com1.disable() # encerra COM
                 else:
                     if (time_now - timer1) > 2:
-                        t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
+                        t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(head['h7']) + to_bytes(cont - 1) + BYTE2_FREE
                         t4_payload = b''
 
                         t4_message = message.build(t4_head, t4_payload)
