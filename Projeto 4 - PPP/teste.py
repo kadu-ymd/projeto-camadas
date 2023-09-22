@@ -12,15 +12,7 @@ def get_time():
     '''
     return str(datetime.now().strftime("%H:%M:%S.%f"))
 
-def build_log(tx: bool,
-              type: int,
-              pck_total: int,
-              pck_len: int,
-              n_pck: int,
-              crc: str,
-              date: str = get_date(),
-              time: str = get_time(),
-              sep: str = ' / ') -> str: 
+def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' / ') -> str: 
     '''
     Constói o log no formato 'DATA HORA / ENVIO/RECEB / TIPO / LEN(PACOTE) / N_PACOTE (head["h4"]) / QTD_PACOTES (head["h3"]) /CRC (caso seja envio)'.
     '''
@@ -34,9 +26,20 @@ def build_log(tx: bool,
     for param in params:
         line += sep + param
 
-    return line
 
-log = build_log(tx=True, type=3, pck_total=14, pck_len=128, n_pck=1, crc='FFFF')
+    return line + '\n'
+
+def log_write(path: str, log: str, mode: str) -> None:
+    with open(path, mode) as file:
+        file.write(log)
+
+log = build_log(tx=True, type=3, pck_total=14, pck_len=128, n_pck=1)
+
+log2 = build_log(tx=True, type=3, pck_total=14, pck_len=128, n_pck=2)
 
 with open('Projeto 4 - PPP/logs/Server1.txt', 'w') as file:
     file.write(log)
+
+with open('Projeto 4 - PPP/logs/Server1.txt', 'a') as file:
+    file.write(log2)
+

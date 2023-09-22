@@ -5,6 +5,16 @@ SERVER_ID = 1
 BYTE1_FREE = b'\xff'
 BYTE2_FREE = b'\xff\xff'
 
+PATH_CLIENT_1 = 'Projeto 4 - PPP/logs/Client1.txt'
+PATH_CLIENT_2 = 'Projeto 4 - PPP/logs/Client2.txt'
+PATH_CLIENT_3 = 'Projeto 4 - PPP/logs/Client3.txt'
+PATH_CLIENT_4 = 'Projeto 4 - PPP/logs/Client4.txt'
+
+PATH_SERVER_1 = 'Projeto 4 - PPP/logs/Server1.txt'
+PATH_SERVER_2 = 'Projeto 4 - PPP/logs/Server2.txt'
+PATH_SERVER_3 = 'Projeto 4 - PPP/logs/Server3.txt'
+PATH_SERVER_4 = 'Projeto 4 - PPP/logs/Server4.txt'
+
 def message_head(rx_head: bytearray):
     try:
         head = {'h0': rx_head[0], 'h1': rx_head[1],
@@ -60,37 +70,6 @@ def get_time():
     return str(datetime.now().strftime("%H:%M:%S.%f"))
 
 class Message:
-    # def __init__(self, type: int, qtd: int, n_pck: int, cont: int) -> None:
-    #     self.qtd = to_bytes(qtd)
-    #     self.type = type
-    #     self.n = to_bytes(n_pck)
-    #     self.cont = cont
-
-
-    # def build_head(self) -> bytearray:
-    #     try:
-    #         if self.type == 1:
-    #             return to_bytes(self.type) + to_bytes(SERVER_ID) + b'\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
-
-    #         elif self.type == 2:
-    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
-
-    #         elif self.type == 3:
-    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff' + b'\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
-            
-    #         elif self.type == 4:
-    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
-            
-    #         elif self.type == 5:
-    #             return to_bytes(self.type) + b'\xff\xff' + self.qtd + self.n + b'\xff\xff' + to_bytes(self.cont - 1) + b'\xff\xff'
-            
-    #         else:
-    #             pass
-    #     except:
-    #         pass
-
-    #     pass
-
     def __init__(self) -> None:
         pass
 
@@ -107,4 +86,23 @@ class Message:
             return head + payload + eop
         except TypeError as error:
             print(error)
+
+    def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' / ') -> str: 
+        '''
+        Constói o log no formato 'DATA HORA / ENVIO/RECEB / TIPO / LEN(PACOTE) / N_PACOTE (head["h4"]) / QTD_PACOTES (head["h3"]) /CRC (caso seja envio)'.
+        '''
+        line = date + ' ' + time
+
+        if tx == True:
+            params = ['envio', str(type), str(pck_len), str(n_pck), str(pck_total), str(crc)]
+        else:
+            params = ['receb', str(type), str(pck_len)]
+        for param in params:
+            line += sep + param
+            
+        return line + '\n'
+
+    def log_write(path: str, log: str, mode: str) -> None:
+        with open(path, mode) as file:
+            file.write(log)
 
