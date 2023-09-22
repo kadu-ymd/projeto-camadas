@@ -52,14 +52,13 @@ def main():
         cont = 1
         indice = 0
         while cont<qtd_pacotes:
+            rec = False
             if cont==qtd_pacotes-1:
                 # Para o último caso, o tamanho do payload muda
                 tam_payload = len(txBuffer) - (qtd_pacotes-1)*tam_payload
                 payload_type3 = txBuffer[indice::]
             else:
                 payload_type3 = txBuffer[indice:cont*tam_payload]
-            
-            indice += tam_payload
             head_type3 = b'\x03' + BYTE2_FREE + to_bytes(qtd_pacotes)+ to_bytes(cont)+ to_bytes(tam_payload) + BYTE1_FREE + to_bytes(cont-1) + BYTE2_FREE
             type3 = message.build(head_type3,payload_type3)
             com1.sendData(type3)
@@ -72,39 +71,51 @@ def main():
                 rx_head, _ = com1.getData(10)
                 _,_ = com1.getData(4)
                 head = message_head(rx_head)
+                rec = True
                 break
 
-            if head['h0'] == 4:
+            if (head['h0'] == 4) and (head['h7'] == cont-1) and rec:
                 # checa se a mensagem recebida é de tipo 4
+                print('4. recebe t4')
+                print('tipo4', head["h7"])
+                print('5. incrementei indice')
+                print('indice ', indice)
+                indice += tam_payload
                 cont+=1
-            
             else:
                 time_now = time.time()
                 if (time_now - timer1)>5:
                     # envia o mesmo pacote com dados de tipo 3
+                    print("Time out 5")
                     com1.sendData(type3)
+                    time.sleep(1)
                     print(type3)
                     timer1 = time.time() # reset timer1 
 
                 if (time_now - timer2)>20:
                     # envia mensagem de tipo 5
+                    print("Time out 20")
                     t5_head = b'\x05' + BYTE2_FREE + to_bytes(qtd_pacotes) + to_bytes(head['h4']) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
                     t5_payload = b''
                     t5_message = message.build(t5_head, t5_payload)
                                                
                     #t5_message = message.build(build_head(head, b'\x05'), payload=b'')
                     com1.sendData(t5_message) 
+                    time.sleep(1)
                     print(f"t5 é {t5_message}")
                     com1.disable()
 
                 else:
+                    rec = False
                     is_full = not com1.rx.getIsEmpty()
                     while is_full:
                         rx_head, _ = com1.getData(10)
                         _,_ = com1.getData(4)
                         head = message_head(rx_head)
+                        rec = True
                         break
-
+                    
+                    print(head)
                     while head['h0'] != 4: 
                         # while recebeu msg t4 == False:
                         is_full = not com1.rx.getIsEmpty()
@@ -113,17 +124,32 @@ def main():
                             _,_ = com1.getData(4)
                             head = message_head(rx_head)
                             break
-
+                        print(f'ho é {head["h0"]}')
                         if head['h0'] == 6:
                             # Recebeu msg t6:
+                            
                             cont = head['h7'] + 1
+                            head_type3 = b'\x03' + BYTE2_FREE + to_bytes(qtd_pacotes)+ to_bytes(cont)+ to_bytes(tam_payload) + BYTE1_FREE + to_bytes(cont-1) + BYTE2_FREE
+                            if cont==qtd_pacotes-1:
+                                # Para o último caso, o tamanho do payload muda
+                                tam_payload = len(txBuffer) - (qtd_pacotes-1)*tam_payload
+                                payload_type3 = txBuffer[indice::]
+                            else:
+                                payload_type3 = txBuffer[indice:cont*tam_payload]
+                                print(payload_type3)
+            
+                            
+                            type3 = message.build(head_type3,payload_type3)
+                            print(f'envio t3 = {type3} e tam_payload = {tam_payload} e indice {indice}')
+
                             com1.sendData(type3) # Envia msg t3
+                            
+                            time.sleep(1)
 
                             # Reset timers
                             timer1 = time.time()
                             timer2 = time.time()
                         
-                    cont +=1
         print("Comunicação encerrada")
         com1.disable() #sucesso
     except Exception as erro:
