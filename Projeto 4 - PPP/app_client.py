@@ -31,7 +31,7 @@ def main():
         txBuffer = open(imageR, 'rb').read()
         qtd_pacotes = math.ceil(len(txBuffer)/tam_payload)
 
-        head_type1 = b'\x01' + to_bytes(SERVER_ID) + b'\xff' + to_bytes(qtd_pacotes) + b'\x00' + BYTE1_FREE*5
+        head_type1 = b'\x01' + to_bytes(SERVER_ID) + BYTE1_FREE + to_bytes(qtd_pacotes) + b'\x00' + BYTE1_FREE*5
         type1 = message.build(head_type1, b'')
         
         while inicia == False:
@@ -51,18 +51,20 @@ def main():
         
         cont = 1
         indice = 0
-        while cont<qtd_pacotes:
+        while cont<=qtd_pacotes:
             rec = False
-            if cont==qtd_pacotes-1:
+            if cont==qtd_pacotes:
                 # Para o último caso, o tamanho do payload muda
                 tam_payload = len(txBuffer) - (qtd_pacotes-1)*tam_payload
                 payload_type3 = txBuffer[indice::]
+
             else:
                 payload_type3 = txBuffer[indice:cont*tam_payload]
             head_type3 = b'\x03' + BYTE2_FREE + to_bytes(qtd_pacotes)+ to_bytes(cont)+ to_bytes(tam_payload) + BYTE1_FREE + to_bytes(cont-1) + BYTE2_FREE
             type3 = message.build(head_type3,payload_type3)
             com1.sendData(type3)
             time.sleep(1)
+            print(f'Mensagem {cont}/{qtd_pacotes} enviada')
             timer1 = time.time() # set timer1 - reenvio
             timer2 = time.time() # set timer2 - timeout
 
@@ -76,10 +78,6 @@ def main():
 
             if (head['h0'] == 4) and (head['h7'] == cont-1) and rec:
                 # checa se a mensagem recebida é de tipo 4
-                print('4. recebe t4')
-                print('tipo4', head["h7"])
-                print('5. incrementei indice')
-                print('indice ', indice)
                 indice += tam_payload
                 cont+=1
             else:
