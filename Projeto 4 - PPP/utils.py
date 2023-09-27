@@ -69,6 +69,25 @@ def get_time():
     '''
     return str(datetime.now().strftime("%H:%M:%S.%f"))
 
+def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' │ '): 
+    '''
+    Constói o log no formato 'DATA HORA │ ENVIO/RECEB │ TIPO │ LEN(PACOTE) │ N_PACOTE (head["h4"]) │ QTD_PACOTES (head["h3"]) │ CRC (caso seja envio)'.
+    '''
+    line = date + ' ' + time
+
+    if tx == True:
+        params = ['envio', str(type), str(pck_len), str(n_pck), str(pck_total), str(crc)]
+    else:
+        params = ['receb', str(type), str(pck_len)]
+    for param in params:
+        line += sep + param
+        
+    return line + '\n'
+
+def file_write(path, content, mode):
+    with open(path, mode) as file:
+        file.write(content)
+
 class Message:
     def __init__(self) -> None:
         pass
@@ -115,22 +134,4 @@ class Message:
         except TypeError as error:
             print(error)
 
-    def build_log(self, tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' │ '): 
-        '''
-        Constói o log no formato 'DATA HORA │ ENVIO/RECEB │ TIPO │ LEN(PACOTE) │ N_PACOTE (head["h4"]) │ QTD_PACOTES (head["h3"]) │ CRC (caso seja envio)'.
-        '''
-        line = date + ' ' + time
-
-        if tx == True:
-            params = ['envio', str(type), str(pck_len), str(n_pck), str(pck_total), str(crc)]
-        else:
-            params = ['receb', str(type), str(pck_len)]
-        for param in params:
-            line += sep + param
-            
-        return line + '\n'
-
-    def file_write(self, path, content, mode):
-        with open(path, mode) as file:
-            file.write(content)
 
