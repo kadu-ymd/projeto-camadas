@@ -31,18 +31,20 @@ def main():
         while idle: # ocioso
             is_full = not com1.rx.getIsEmpty()
             while is_full:
-                rx_head, _ = com1.getData(10)
+                rx_head, n_head = com1.getData(10)
                 head = message.head_unpack(rx_head)
                 # head = message_head(rx_head)
                 QTD_PACOTES = head['h3']
                 n_pck = head['h4']
                 
-                _, _ = com1.getData(4)
+                _, n_eop = com1.getData(4)
                 received = True
                 break
             if received == True: # recebeu msg t1
                 if SERVER_ID == head['h1']: # é para mim
                     idle = False # ocioso = false
+                    log1 = build_log(False, 1, QTD_PACOTES, (n_head + n_eop), n_pck)
+                    file_write(PATH_SERVER_1, log1, 'w')
             time.sleep(1) # sleep 1 sec
 
         received = False
@@ -132,7 +134,7 @@ def main():
 
         image = list_to_bytearray(byte_image)
 
-        message.file_write(IMAGE_W, image, 'wb')
+        file_write(IMAGE_W, image, 'wb')
 
         # with open(IMAGE_W, 'wb') as file:
         #     file.write(image)

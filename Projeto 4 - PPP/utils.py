@@ -85,7 +85,7 @@ def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc
     return line + '\n'
 
 def file_write(path, content, mode):
-    with open(path, mode) as file:
+    with open(path, mode, encoding='utf-8') as file:
         file.write(content)
 
 class Message:
