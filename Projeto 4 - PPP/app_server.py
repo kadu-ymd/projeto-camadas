@@ -32,7 +32,8 @@ def main():
             is_full = not com1.rx.getIsEmpty()
             while is_full:
                 rx_head, _ = com1.getData(10)
-                head = message_head(rx_head)
+                head = message.head_unpack(rx_head)
+                # head = message_head(rx_head)
                 QTD_PACOTES = head['h3']
                 n_pck = head['h4']
                 
@@ -46,6 +47,7 @@ def main():
 
         received = False
 
+        # t2_head = message.head_pack(2, QTD_PACOTES, n_pck, 0, head['h7'], cont=1)
         t2_head = b'\x02' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + b'\xff' + to_bytes(head['h7']) + BYTE2_FREE
         t2_payload = b''
 
@@ -56,7 +58,8 @@ def main():
 
         cont = 1 # cont = 1
 
-        while cont < head['h3']: # cont <= numPckg
+        while cont <= head['h3']: # cont <= numPckg
+            print(cont, head['h3'])
             is_full = not com1.rx.getIsEmpty()
             received = False
             timer1 = time.time() # set timer1
@@ -66,6 +69,7 @@ def main():
                 rx_head, _ = com1.getData(10)
                 head = message_head(rx_head)
                 n_pck = head['h4']
+                print(n_pck)
                 payload_size = head['h5']
                 
                 rx_payload, _ = com1.getData(payload_size)
@@ -89,13 +93,12 @@ def main():
                     time.sleep(1)
 
                     byte_image.append(rx_payload)
-                    print(byte_image)
 
                     cont += 1
                 else:
+                    print('errooooo')
                     t6_head = b'\x06' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(head['h7']) + to_bytes(cont - 1) + BYTE2_FREE
                     t6_payload = b''
-                    print(to_bytes(cont))
                     t6_message = message.build(t6_head, t6_payload)
 
                     com1.sendData(t6_message) # envia msg t6
@@ -128,10 +131,11 @@ def main():
                         timer1 = time.time()
 
         image = list_to_bytearray(byte_image)
-        print(image)
 
-        with open(IMAGE_W, 'wb') as file:
-            file.write(image)
+        message.file_write(IMAGE_W, image, 'wb')
+
+        # with open(IMAGE_W, 'wb') as file:
+        #     file.write(image)
         print('Sucesso!')
 
         # Encerra comunicação

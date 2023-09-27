@@ -73,7 +73,35 @@ class Message:
     def __init__(self) -> None:
         pass
 
-    def build(self, head: bytearray, payload: bytearray, eop: bytearray = EOP) -> bytearray:
+    def head_pack(self, type: int, qt_pack: int, n_pack: int, pack_len: int, last_pack: int, cont: int):
+        msg_head = to_bytes(type)
+        if type == 1:
+            msg_head += to_bytes(SERVER_ID) + BYTE1_FREE + to_bytes(qt_pack) + to_bytes(n_pack) + to_bytes(pack_len) + BYTE1_FREE*4
+        elif type == 2: # confirmação -> handshake (olhar enunciado)
+            msg_head += BYTE2_FREE + to_bytes(qt_pack) + to_bytes(n_pack) + to_bytes(pack_len) + to_bytes(last_pack) + BYTE2_FREE
+        elif type == 3:
+            msg_head += BYTE2_FREE + to_bytes(qt_pack) + to_bytes(cont) + to_bytes(pack_len) + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
+        elif type == 4: # confirmação -> handshake (olhar enunciado)
+            msg_head += BYTE2_FREE + to_bytes(qt_pack) + to_bytes(n_pack) + to_bytes(pack_len) + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
+        elif type == 5:
+            msg_head += BYTE2_FREE + to_bytes(qt_pack) + to_bytes(n_pack) + to_bytes(pack_len) + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
+        else:
+            msg_head += BYTE2_FREE + to_bytes(qt_pack) + to_bytes(n_pack) + to_bytes(pack_len) + to_bytes(last_pack) + to_bytes(cont - 1) + BYTE2_FREE
+        return msg_head
+
+    def head_unpack(self, rx_head: bytearray):
+        try:
+            head = {'h0': rx_head[0], 'h1': rx_head[1],
+                    'h2': rx_head[2], 'h3': rx_head[3],
+                    'h4': rx_head[4], 'h5': rx_head[5],
+                    'h6': rx_head[6], 'h7': rx_head[7],
+                    'h8': rx_head[8], 'h9': rx_head[9]}
+            return head
+        
+        except (TypeError, IndexError) as error:
+            print(error)
+
+    def build(self, head: bytearray, payload: bytearray, eop: bytearray = EOP):
         '''
         Recebe o HEAD, o PAYLOAD e o EOP (padrão igual a AA BB CC DD) e devolve a mensagem pronta.
     
@@ -87,7 +115,7 @@ class Message:
         except TypeError as error:
             print(error)
 
-    def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' / ') -> str: 
+    def build_log(self, tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' / '): 
         '''
         Constói o log no formato 'DATA HORA / ENVIO/RECEB / TIPO / LEN(PACOTE) / N_PACOTE (head["h4"]) / QTD_PACOTES (head["h3"]) /CRC (caso seja envio)'.
         '''
@@ -102,7 +130,7 @@ class Message:
             
         return line + '\n'
 
-    def log_write(path: str, log: str, mode: str) -> None:
+    def file_write(self, path, content, mode):
         with open(path, mode) as file:
-            file.write(log)
+            file.write(content)
 
