@@ -115,9 +115,9 @@ class Message:
         except TypeError as error:
             print(error)
 
-    def build_log(self, tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' / '): 
+    def build_log(self, tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' │ '): 
         '''
-        Constói o log no formato 'DATA HORA / ENVIO/RECEB / TIPO / LEN(PACOTE) / N_PACOTE (head["h4"]) / QTD_PACOTES (head["h3"]) /CRC (caso seja envio)'.
+        Constói o log no formato 'DATA HORA │ ENVIO/RECEB │ TIPO │ LEN(PACOTE) │ N_PACOTE (head["h4"]) │ QTD_PACOTES (head["h3"]) │ CRC (caso seja envio)'.
         '''
         line = date + ' ' + time
 
