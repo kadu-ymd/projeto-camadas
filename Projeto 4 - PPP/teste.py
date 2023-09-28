@@ -1,45 +1,18 @@
-from datetime import datetime 
+import crcmod.predefined
+from binascii import unhexlify
+from utils import *
 
-def get_date():
-    '''
-    Retorna a data no formato dd/mm/aa.
-    '''
-    return str(datetime.now().strftime("%d/%m/%y"))
+seq = b'\xd9\x1f\xd0\x04\xb2\xb4\xd9\x1f\xd0\x04\xb2\xb4\xd9\x1f\xd0\x04\xb2\xb4\xd9\x1f\xd0\x04\xb2\xb4\xd9\x1f\xd0\x04\xb2\xb4\xd9\x1f\xd0\x04\xb2\xb4\xd9\x1f\xd0\x04\xb2\xb4\xd9\x1f\xd0\x04\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0\x8f\xbf\x01\x0e\xea\xd0\xa6q1\xe3\xe1\x00\x00\x00\x00IEND\xaeB`\x82'
 
-def get_time():
-    '''
-    Retorna o horário no formato hora:mês:seg.ms.
-    '''
-    return str(datetime.now().strftime("%H:%M:%S.%f"))
+seq_str = seq.hex()
 
-def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' / ') -> str: 
-    '''
-    Constói o log no formato 'DATA HORA / ENVIO/RECEB / TIPO / LEN(PACOTE) / N_PACOTE (head["h4"]) / QTD_PACOTES (head["h3"]) /CRC (caso seja envio)'.
-    '''
-    line = date + ' ' + time
+s = unhexlify(seq_str)
 
-    if tx == True:
-        params = ['envio', str(type), str(pck_len), str(n_pck), str(pck_total), str(crc)]
-    else:
-        params = ['receb', str(type), str(pck_len)]
+crc16 = crcmod.predefined.Crc('xmodem')
+crc16.update(s)
 
-    for param in params:
-        line += sep + param
+crc = crc16.hexdigest()
 
+head = b'\xff'*8 + bytes.fromhex(crc)
 
-    return line + '\n'
-
-def log_write(path: str, log: str, mode: str) -> None:
-    with open(path, mode) as file:
-        file.write(log)
-
-log = build_log(tx=True, type=3, pck_total=14, pck_len=128, n_pck=1)
-
-log2 = build_log(tx=True, type=3, pck_total=14, pck_len=128, n_pck=2)
-
-with open('Projeto 4 - PPP/logs/Server1.txt', 'w') as file:
-    file.write(log)
-
-with open('Projeto 4 - PPP/logs/Server1.txt', 'a') as file:
-    file.write(log2)
-
+print(hex(head[8]), hex(head[9]))

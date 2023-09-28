@@ -3,6 +3,8 @@ from enlaceTx import *
 import time
 import numpy as np
 from utils import *
+import crcmod.predefined
+from binascii import unhexlify
 
 serialName = "COM6"
 IMAGE_W = 'Projeto 4 - PPP/img/img_recebida.png'
@@ -78,6 +80,19 @@ def main():
 
                 rx_eop, _ = com1.getData(4)
                 received = True
+
+                # CRC teste
+                seq_str = rx_payload.hex()
+
+                s = unhexlify(seq_str)
+
+                crc16 = crcmod.predefined.Crc('xmodem')
+                crc16.update(s)
+
+                crc = crc16.hexdigest()
+
+                print('crc', crc)
+                # --------------------------------------
                 break
             print(head)
             
@@ -134,10 +149,11 @@ def main():
 
         image = list_to_bytearray(byte_image)
 
-        file_write(IMAGE_W, image, 'wb')
+        # file_write(IMAGE_W, image, 'wb')
 
-        # with open(IMAGE_W, 'wb') as file:
-        #     file.write(image)
+        with open(IMAGE_W, 'wb') as file:
+            file.write(image)
+
         print('Sucesso!')
 
         # Encerra comunicação
