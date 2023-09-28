@@ -3,6 +3,8 @@ from enlaceTx import *
 from utils import *
 import time
 import math
+import crcmod.predefined
+from binascii import unhexlify
 
 serialName = "COM4"
 
@@ -60,11 +62,22 @@ def main():
 
             else:
                 payload_type3 = txBuffer[indice:cont*tam_payload]
-            head_type3 = b'\x03' + BYTE2_FREE + to_bytes(qtd_pacotes)+ to_bytes(cont)+ to_bytes(tam_payload) + BYTE1_FREE + to_bytes(cont-1) + BYTE2_FREE
+
+            # CRC 
+            seq_str = payload_type3.hex()
+            s = unhexlify(seq_str)
+            crc16 = crcmod.predefined.Crc('xmodem')
+            crc16.update(s)
+            crc = bytes.fromhex(crc16.hexdigest())
+
+            # --------------------------------------
+
+            head_type3 = b'\x03' + BYTE2_FREE + to_bytes(qtd_pacotes)+ to_bytes(cont)+ to_bytes(tam_payload) + BYTE1_FREE + to_bytes(cont-1) + crc
             type3 = message.build(head_type3,payload_type3)
             com1.sendData(type3)
             time.sleep(1)
             print(f'Mensagem {cont}/{qtd_pacotes} enviada')
+            print(f'CRC: {crc}')
             timer1 = time.time() # set timer1 - reenvio
             timer2 = time.time() # set timer2 - timeout
 
