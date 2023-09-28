@@ -1,4 +1,6 @@
-from datetime import datetime 
+from datetime import datetime
+import crcmod.predefined
+from binascii import unhexlify
 
 EOP = b'\xAA\xBB\xCC\xDD'
 SERVER_ID = 1
@@ -134,4 +136,13 @@ class Message:
         except TypeError as error:
             print(error)
 
+    def crc_build(self, payload: bytearray):
+        seq_str = payload.hex()
 
+        s = unhexlify(seq_str)
+
+        crc16 = crcmod.predefined.Crc('xmodem')
+        crc16.update(s)
+
+        crc = crc16.hexdigest()
+        return crc

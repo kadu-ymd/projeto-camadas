@@ -82,14 +82,7 @@ def main():
                 received = True
 
                 # CRC teste
-                seq_str = rx_payload.hex()
-
-                s = unhexlify(seq_str)
-
-                crc16 = crcmod.predefined.Crc('xmodem')
-                crc16.update(s)
-
-                crc = crc16.hexdigest()
+                crc = message.crc_build(rx_payload)
 
                 print('crc', crc)
                 # --------------------------------------
