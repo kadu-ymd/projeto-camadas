@@ -7,6 +7,8 @@ SERVER_ID = 1
 BYTE1_FREE = b'\xff'
 BYTE2_FREE = b'\xff\xff'
 
+ENCODING = 'utf-8'
+
 PATH_CLIENT_1 = 'Projeto 4 - PPP/logs/Client1.txt'
 PATH_CLIENT_2 = 'Projeto 4 - PPP/logs/Client2.txt'
 PATH_CLIENT_3 = 'Projeto 4 - PPP/logs/Client3.txt'
@@ -46,12 +48,9 @@ def build_head(head: dict, msg_type: bytes, message: bytearray = b''):
 def build_message(built_head: bytearray, payload: bytearray, eop: bytearray = EOP):
     return built_head + payload + eop
 
-def is_package_ok(rx_head: bytearray, rx_payload: bytearray, rx_eop: bytearray, cont: int):
+def is_package_ok(rx_head: bytearray, cont: int, crc1, crc2):
     last_pckg = message_head(rx_head)['h7']
-    if (cont - 1) == last_pckg:
-        return True
-    else:
-        return False
+    return (((cont - 1) == last_pckg) and (crc1 == crc2))
 
 def list_to_bytearray(list: list):
     array: bytearray = b''
@@ -71,7 +70,7 @@ def get_time():
     '''
     return str(datetime.now().strftime("%H:%M:%S.%f"))
 
-def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' │ '): 
+def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc, date: str = get_date(), time: str = get_time(), sep: str = ' │ '): 
     '''
     Constói o log no formato 'DATA HORA │ ENVIO/RECEB │ TIPO │ LEN(PACOTE) │ N_PACOTE (head["h4"]) │ QTD_PACOTES (head["h3"]) │ CRC (caso seja envio)'.
     '''
@@ -136,7 +135,7 @@ class Message:
         except TypeError as error:
             print(error)
 
-    def crc_build(self, payload: bytearray):
+    def crc_build(self, payload):
         seq_str = payload.hex()
 
         s = unhexlify(seq_str)
