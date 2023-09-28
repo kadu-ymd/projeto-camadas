@@ -7,10 +7,10 @@ SERVER_ID = 1
 BYTE1_FREE = b'\xff'
 BYTE2_FREE = b'\xff\xff'
 
-PATH_CLIENT_1 = 'Projeto 4 - PPP/logs/Client1.txt'
-PATH_CLIENT_2 = 'Projeto 4 - PPP/logs/Client2.txt'
-PATH_CLIENT_3 = 'Projeto 4 - PPP/logs/Client3.txt'
-PATH_CLIENT_4 = 'Projeto 4 - PPP/logs/Client4.txt'
+PATH_CLIENT_1 = './logs/Client1.txt'
+PATH_CLIENT_2 = './logs/Client2.txt'
+PATH_CLIENT_3 = './logs/Client3.txt'
+PATH_CLIENT_4 = './logs/Client4.txt'
 
 PATH_SERVER_1 = 'Projeto 4 - PPP/logs/Server1.txt'
 PATH_SERVER_2 = 'Projeto 4 - PPP/logs/Server2.txt'
@@ -71,7 +71,7 @@ def get_time():
     '''
     return str(datetime.now().strftime("%H:%M:%S.%f"))
 
-def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc: str = 'FFFF', date: str = get_date(), time: str = get_time(), sep: str = ' │ '): 
+def build_log(tx: bool, type: int, pck_total: int, pck_len: int, n_pck: int, crc, date: str = get_date(), time: str = get_time(), sep: str = ' │ '): 
     '''
     Constói o log no formato 'DATA HORA │ ENVIO/RECEB │ TIPO │ LEN(PACOTE) │ N_PACOTE (head["h4"]) │ QTD_PACOTES (head["h3"]) │ CRC (caso seja envio)'.
     '''
@@ -136,7 +136,7 @@ class Message:
         except TypeError as error:
             print(error)
 
-    def crc_build(self, payload: bytearray):
+    def crc_build(self, payload):
         seq_str = payload.hex()
 
         s = unhexlify(seq_str)
