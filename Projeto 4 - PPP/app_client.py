@@ -29,6 +29,7 @@ def main():
         time.sleep(1)
         print("Abriu a comunicação")
 
+        timeout = False
         inicia = False
         imageR = './img/imagem_enviada.png'
         txBuffer = open(imageR, 'rb').read()
@@ -57,9 +58,9 @@ def main():
             file_write(caso, content, 'a')
             break
         
-        cont = 2
+        cont = 1
         indice = 0
-        while cont<=qtd_pacotes:
+        while cont<=qtd_pacotes and (not timeout):
             rec = False
             if cont==qtd_pacotes:
                 # Para o último caso, o tamanho do payload muda
@@ -129,21 +130,18 @@ def main():
                         time.sleep(1)
                         content = build_log(True, 5, len(t5_message), cont, qtd_pacotes, crc)
                         file_write(caso, content, 'a')
-                        print(f"t5 é {t5_message}")
+                        timeout=True
+                        cond=False
                         com1.disable()
 
                     else:   
-                        print(f'Recebi o seguinte head: {head}')
-                        print(f'rec é {rec}')
+                        #print(f'Recebi o seguinte head: {head}')
                         if rec:
-                            print(f'ho é {head["h0"]}')
                             if head['h0'] == 6:
                                 content = build_log(False, 6, len(rx_head)+4, '', qtd_pacotes, crc=0)
                                 file_write(caso, content, 'a')
-                                # Recebeu msg t6:
                                         
                                 cont = head['h6']
-                                print(f'Corrijo o contador para o valor {cont}')
                                 
                                 if cont==qtd_pacotes:
                                     # Para o último caso, o tamanho do payload muda
@@ -160,11 +158,10 @@ def main():
                                 crc = bytes.fromhex(crc16.hexdigest())
                                 
                                 head_type3 = b'\x03' + BYTE2_FREE + to_bytes(qtd_pacotes)+ to_bytes(cont)+ to_bytes(tam_payload) + BYTE1_FREE + to_bytes(head["h7"]) + crc
-                                
+
                                 type3 = message.build(head_type3,payload_type3)
 
                                 com1.sendData(type3) # Envia msg t3
-                                print('1. envio a mensagem corrigida')
                                 content = build_log(True, 3, len(type3), cont, qtd_pacotes, crc)
                                 file_write(caso, content, 'a')
                                         
@@ -173,16 +170,15 @@ def main():
                                 # Reset timers
                                 timer1 = time.time()
                                 timer2 = time.time()
-                                print(cont)
                 else:
-                    print(f'estou aqui e head["h7"] == cont-1 é {head["h7"] == cont-1}')
                     if (head['h0'] == 4) and (head['h7'] == cont-1) and rec:
                         cont+=1
-                        print(f'Somo o contador e h0 é {head["h0"]} com corpo {head}')
                         cond = False
                         indice += tam_payload
                         content = build_log(False, 4, len(rx_head)+4, cont, qtd_pacotes, crc)
                         file_write(caso, content, 'a')
+                    
+                print(f'timeout {timeout}')
                                
         print("Comunicação encerrada")
         com1.disable() #sucesso
