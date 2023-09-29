@@ -98,6 +98,7 @@ def main():
 
                 pckg_status = is_package_ok(rx_head, cont, rx_crc, crc)
                 if pckg_status == True: # pckg ok
+                    print('Recebi uma mensagem do tipo 3 e o pacote está OK!', end='\r\n')
                     t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + BYTE1_FREE + to_bytes(cont - 1) + BYTE2_FREE
                     t4_payload = b''
 
@@ -115,6 +116,7 @@ def main():
                     f.write(log)
                     f.close()
                 else:
+                    print('Recebi uma mensagem do tipo 3 mas o pacote não está OK!', end='\r\n')
                     t6_head = b'\x06' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(cont) + to_bytes(cont - 1) + BYTE2_FREE
                     t6_payload = b''
                     t6_message = message.build(t6_head, t6_payload)
@@ -126,7 +128,10 @@ def main():
                     f = open(PATH_SERVER_1, 'a', encoding=ENCODING)
                     f.write(log)
                     f.close()
+
+                    com1.rx.clearBuffer()
             else:
+                print('Não recebi mensagens!', end='\r\n')
                 time.sleep(1)
                 time_now = time.time()
                 if (time_now - timer2) > 20:
@@ -144,36 +149,31 @@ def main():
                     f.write(log)
                     f.close()
 
-                    print('Timeout :(')
+                    print('Timeout :(', end='\r\n')
                     com1.disable() # encerra COM
-                else:
-                    if (time_now - timer1) > 2:
+                    
+                if (time_now - timer1) > 2:
+                    print('Tentando comunicação com client...', end='\r\n')
+                    t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(head['h7']) + to_bytes(cont - 1) + BYTE2_FREE
+                    t4_payload = b''
 
-                        t4_head = b'\x04' + BYTE2_FREE + to_bytes(QTD_PACOTES) + to_bytes(n_pck) + b'\x00' + to_bytes(head['h7']) + to_bytes(cont - 1) + BYTE2_FREE
-                        t4_payload = b''
+                    t4_message = message.build(t4_head, t4_payload)
 
-                        t4_message = message.build(t4_head, t4_payload)
+                    com1.sendData(t4_message) # envia msg t4
+                    time.sleep(1)
 
-                        com1.sendData(t4_message) # envia msg t4
-                        time.sleep(1)
-
-                        log = build_log(True, 4, QTD_PACOTES, (len(t4_head) + len(t4_payload) + 4), n_pck, crc_log)
-                        f = open(PATH_SERVER_1, 'a', encoding=ENCODING)
-                        f.write(log)
-                        f.close()
-                        # with open(PATH_SERVER_1, 'a', encoding='utf-8') as file:
-                        #     file.write(log)
-
-                        timer1 = time.time()
+                    log = build_log(True, 4, QTD_PACOTES, (len(t4_head) + len(t4_payload) + 4), n_pck, crc_log)
+                    f = open(PATH_SERVER_1, 'a', encoding=ENCODING)
+                    f.write(log)
+                    f.close()
+                    timer1 = time.time()
 
         image = list_to_bytearray(byte_image)
-
-        # file_write(IMAGE_W, image, 'wb')
 
         with open(IMAGE_W, 'wb') as file:
             file.write(image)
 
-        print('Sucesso!')
+        print('Sucesso!', end='\r\n')
 
         # Encerra comunicação
         print("-------------------------")
