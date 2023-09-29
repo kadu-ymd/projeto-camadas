@@ -9,10 +9,10 @@ BYTE2_FREE = b'\xff\xff'
 
 ENCODING = 'utf-8'
 
-PATH_CLIENT_1 = 'Projeto 4 - PPP/logs/Client1.txt'
-PATH_CLIENT_2 = 'Projeto 4 - PPP/logs/Client2.txt'
-PATH_CLIENT_3 = 'Projeto 4 - PPP/logs/Client3.txt'
-PATH_CLIENT_4 = 'Projeto 4 - PPP/logs/Client4.txt'
+PATH_CLIENT_1 = './logs/Client1.txt'
+PATH_CLIENT_2 = './logs/Client2.txt'
+PATH_CLIENT_3 = './logs/Client3.txt'
+PATH_CLIENT_4 = './logs/Client4.txt'
 
 PATH_SERVER_1 = 'Projeto 4 - PPP/logs/Server1.txt'
 PATH_SERVER_2 = 'Projeto 4 - PPP/logs/Server2.txt'
