@@ -12,7 +12,7 @@ def signal_handler(signal, frame):
     print('You pressed Ctrl+C!')
     sys.exit(0)
 
-#converte intensidade em Db, caso queiram ...
+#converte intensidade em Db
 def todB(s):
     sdB = 10*np.log10(s)
     return(sdB)
@@ -61,7 +61,9 @@ def main():
 
     for i in range(2):
         freq_hz = frequencias[NUM][i]
-        senoides += np.sin(2 * np.pi * freq_hz * t)
+        senoide = np.sin(2 * np.pi * freq_hz * t)
+        senoides += senoide
+        signal.plotFFT(signal=senoide, fs=freq_hz)
 
 
     print("Executando as senoides (emitindo o som)")
@@ -72,7 +74,6 @@ def main():
     plt.show()
     # aguarda fim do audio
     sd.wait()
-    #signal.plotFFT(signal, fs)
     
 
 if __name__ == "__main__":
