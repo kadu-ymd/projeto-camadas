@@ -1,7 +1,9 @@
-import time
+import numpy as np
 
-for i in range(3, 0, -1):
-    print(f'{i}', end='\r')
-    time.sleep(1)
+a = [941,1336]
 
-print('\nasdsaokd')
+b = [1721.7406769943166, 578.9942543553803, 1128.9306524863418]
+
+for v in a:
+    for p in b:
+        print(f'{v} & {p}, {np.isclose(v, p, rtol=.1)}')
