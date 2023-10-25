@@ -53,8 +53,8 @@ def main():
     print("Gerando Tons base")
 
     duracao = 2
-    taxa_amostragem = 44100
-    n_amostras = taxa_amostragem * duracao
+    fs = 44100
+    n_amostras = fs * duracao
     t = np.linspace(0, duracao, n_amostras)
 
     senoides = np.zeros(n_amostras)
@@ -63,17 +63,21 @@ def main():
         freq_hz = frequencias[NUM][i]
         senoide = np.sin(2 * np.pi * freq_hz * t)
         senoides += senoide
-        signal.plotFFT(signal=senoide, fs=freq_hz)
 
+    signal.plotFFT(signal=senoides, fs=fs)
+    plt.figure()
+    plt.plot(t, senoide)
 
     print("Executando as senoides (emitindo o som)")
     print("Gerando Tom referente ao símbolo : {}".format(NUM))
     tone=senoides
-    sd.play(tone, taxa_amostragem)
+    sd.play(tone, fs)
+    sd.wait()
+    
     # Exibe gráficos
     plt.show()
     # aguarda fim do audio
-    sd.wait()
+    
     
 
 if __name__ == "__main__":
