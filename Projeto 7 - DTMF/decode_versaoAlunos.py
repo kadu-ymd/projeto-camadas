@@ -1,6 +1,5 @@
-# Importe todas as bibliotecas
 from suaBibSignal import *
-import peakutils  # alternativas  #from detect_peaks import *   #import pickle
+import peakutils 
 import numpy as np
 import sounddevice as sd
 import matplotlib.pyplot as plt
@@ -19,62 +18,44 @@ FREQUENCIAS = {
         9: [852, 1477],
     }
 
-def encontraFrequencias(picos, diff=600):
-    for pico in picos:
-        for _, value in FREQUENCIAS.items():
-            if abs(pico - value[0]) < diff:
-                diff, frequencia0 = abs(pico-value[0]), value[0]
-
-    i = 0
+def encontraTecla(picos):
+    def encontraFrequencia(diff=600):
+        for pico in picos:
+            for _, value in FREQUENCIAS.items():
+                if abs(pico - value[i]) < diff:
+                    diff, frequencia = abs(pico-value[0]), value[i]
+        return frequencia
 
     def filter_function(item):
-        valor_desejado = frequencia0
+        valor_desejado = frequencia
         _, value = item
         if value[i] == valor_desejado:
             return True
         return False
-
+    
+    i = 0
+    frequencia = encontraFrequencia()
     frequencia_filtrada = dict(filter(filter_function, FREQUENCIAS.items()))
 
-    diff = 600
-    for pico in picos:
-        for _, value in FREQUENCIAS.items():
-            if abs(pico - value[1]) < diff:
-                diff, frequencia1 = abs(pico-value[1]), value[1]
-
-    def filter_function1(item):
-        valor_desejado = frequencia1
-        _, value = item
-        if value[1] == valor_desejado:
-            return True
-        return False
-
-    frequencia_filtrada1 = dict(filter(filter_function1, frequencia_filtrada.items()))
+    i = 1
+    frequencia = encontraFrequencia()
+    frequencia_filtrada1 = dict(filter(filter_function, frequencia_filtrada.items()))
 
     for key in frequencia_filtrada1:
         return key
 
-# funcao para transformas intensidade acustica em dB, caso queira usar
 def todB(s):
+    # Transforma intensidade acustica em dB
     sdB = 10 * np.log10(s)
     return sdB
 
 
 def main():
-    # *****************************instruções********************************
-
-    # declare um objeto da classe da sua biblioteca de apoio (cedida)
-    # algo como:
     signal = signalMeu()
-
-    # voce importou a bilioteca sounddevice como, por exemplo, sd. entao
-    # os seguintes parametros devem ser setados:
     f_amostragem = 44100
     sd.default.samplerate = f_amostragem  # taxa de amostragem
     sd.default.channels = 2  # numCanais -> o numero de canais, tipicamente são 2. Placas com dois canais. Se ocorrer problemas pode tentar com 1. No caso de 2 canais, ao gravar um audio, terá duas listas
-    duration = (
-        2  # tempo em segundos que ira aquisitar o sinal acustico captado pelo mic
-    )
+    duration = (2)  
 
     # calcule o numero de amostras "numAmostras" que serao feitas (numero de aquisicoes) durante a gracação. Para esse cálculo você deverá utilizar a taxa de amostragem e o tempo de gravação
 
@@ -138,7 +119,7 @@ def main():
 
     print(picos)
 
-    tecla = encontraFrequencias(picos)
+    tecla = encontraTecla(picos)
 
     print(f'A tecla detectada foi {tecla}!')
 
