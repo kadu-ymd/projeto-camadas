@@ -6,7 +6,7 @@ import sounddevice as sd
 import matplotlib.pyplot as plt
 import time
 
-frequencias = {
+FREQUENCIAS = {
         0: [941, 1336],
         1: [697, 1209],
         2: [697, 1336],
@@ -18,6 +18,41 @@ frequencias = {
         8: [852, 1336],
         9: [852, 1477],
     }
+
+def encontraFrequencias(picos, diff=600):
+    for pico in picos:
+        for _, value in FREQUENCIAS.items():
+            if abs(pico - value[0]) < diff:
+                diff, frequencia0 = abs(pico-value[0]), value[0]
+
+    i = 0
+
+    def filter_function(item):
+        valor_desejado = frequencia0
+        _, value = item
+        if value[i] == valor_desejado:
+            return True
+        return False
+
+    frequencia_filtrada = dict(filter(filter_function, FREQUENCIAS.items()))
+
+    diff = 600
+    for pico in picos:
+        for _, value in FREQUENCIAS.items():
+            if abs(pico - value[1]) < diff:
+                diff, frequencia1 = abs(pico-value[1]), value[1]
+
+    def filter_function1(item):
+        valor_desejado = frequencia1
+        _, value = item
+        if value[1] == valor_desejado:
+            return True
+        return False
+
+    frequencia_filtrada1 = dict(filter(filter_function1, frequencia_filtrada.items()))
+
+    for key in frequencia_filtrada1:
+        return key
 
 # funcao para transformas intensidade acustica em dB, caso queira usar
 def todB(s):
@@ -38,7 +73,7 @@ def main():
     sd.default.samplerate = f_amostragem  # taxa de amostragem
     sd.default.channels = 2  # numCanais -> o numero de canais, tipicamente são 2. Placas com dois canais. Se ocorrer problemas pode tentar com 1. No caso de 2 canais, ao gravar um audio, terá duas listas
     duration = (
-        3  # tempo em segundos que ira aquisitar o sinal acustico captado pelo mic
+        2  # tempo em segundos que ira aquisitar o sinal acustico captado pelo mic
     )
 
     # calcule o numero de amostras "numAmostras" que serao feitas (numero de aquisicoes) durante a gracação. Para esse cálculo você deverá utilizar a taxa de amostragem e o tempo de gravação
@@ -78,7 +113,7 @@ def main():
     plt.title('Áudio (Hz) x Tempo (s)')
     
 
-    # ## Calcule e plote o Fourier do sinal audio. como saida tem-se a amplitude e as frequencias
+    ## Calcule e plote o Fourier do sinal audio. como saida tem-se a amplitude e as frequencias
 
     xf, yf = signal.calcFFT(dados, f_amostragem)
 
@@ -95,19 +130,17 @@ def main():
     # # Comece com os valores:
 
     index = peakutils.indexes(yf, thres=0.15, min_dist=50)
-    print(f"index de picos {index}") #yf é o resultado da transformada de fourier
 
     # #printe os picos encontrados!
     # # Aqui você deverá tomar o seguinte cuidado: A funcao  peakutils.indexes retorna as POSICOES dos picos. Não os valores das frequências onde ocorrem! Pense a respeito
 
-    picos = [yf[i] for i in index if yf[i] > 500]
-        
+    picos = [xf[i] for i in index]
+
     print(picos)
 
-    for v in frequencias.values():
-        for p in picos:
-            print(f'{v} & {p}, {np.isclose()}')
+    tecla = encontraFrequencias(picos)
 
+    print(f'A tecla detectada foi {tecla}!')
 
     # #encontre na tabela duas frequencias proximas às frequencias de pico encontradas e descubra qual foi a tecla
     # #print o valor tecla!!!
@@ -117,7 +150,6 @@ def main():
 
     # ## Exiba gráficos do fourier do som gravados
     plt.show()
-
 
 if __name__ == "__main__":
     main()
