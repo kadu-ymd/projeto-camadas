@@ -19,16 +19,20 @@ duration = n_amostras / sr  # em segundos
 t = np.linspace(0, duration, n_amostras)  # em segundos
 
 canal1 = [data[i][0] for i in range(n_amostras)]
+canal1 /= (np.max(np.abs(canal1)))
 canal2 = [data[i][1] for i in range(n_amostras)]
+
+sd.play(canal1, SAMPLERATE)
+sd.wait()
 
 # --------------------------------------
 
 # Descomentar para visualizar o audio
 
-# plt.figure()
-# plt.plot(t, canal1)
-# plt.grid(True)
-# plt.title('Canal 1')
+plt.figure()
+plt.plot(t, canal1)
+plt.grid(True)
+plt.title('Canal 1')
 
 # plt.figure()
 # plt.plot(t, canal2)
@@ -56,6 +60,8 @@ plt.title('Sem filtro')
 signal.plotFFT(y1, SAMPLERATE)
 plt.title('Com filtro')
 
+
+# Música original
 # sd.play(y1, SAMPLERATE)
 # sd.wait()
 
